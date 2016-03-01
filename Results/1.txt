@@ -1,0 +1,27 @@
+80.4
+79.1
+78.85
+78.55
+80.35
+mean is  79.45
+mean for nn is  74.83
+mean for tree_bagger is  78.43
+mean for random_forest is  78.69
+mean for rbf_svm is  80.03
+
+
+81.6
+79.2
+79.8
+78.1
+78.8
+79.7
+78.6
+77.6
+79.6
+82.0
+mean is  79.5
+mean for nn is  73.98
+mean for tree_bagger is  78.73
+mean for random_forest is  78.83
+mean for rbf_svm is  80.43

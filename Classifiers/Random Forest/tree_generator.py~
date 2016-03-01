@@ -1,0 +1,116 @@
+import os
+import sys
+import random
+import math
+from collections import Counter
+from itertools import count, takewhile
+
+def frange(start, stop, step):
+        return list(takewhile(lambda x: x< stop, count(start, step)))
+
+class DecisionTree(object):
+
+	""" A Class used for implemnting the Decision Tree of the random forest algorithm """
+
+	def __init__(self, height=10,fraction=0.5):
+		self.max_height = height
+		self.root = None
+		self.fraction = fraction
+
+	def build_node(self,Data,Classes,level):
+		print "level is " + str(level)
+		if level>self.max_height or calculate_entropy(Classes) == 0:
+			return Counter(Classes).most_common()[0][0]
+		feature_list = random.sample(range(0,13),int(len(Data[0])*self.fraction))
+		#print "finding best split"
+		[feature_index, value] = self.find_best_split(Data, Classes, feature_list)
+		#print "coming out"
+		[Data_left,Classes_left,Data_right,Classes_right] = split_data(Data, Classes, value, feature_index)
+		
+		if len(Classes_left) == 0 or len(Classes_right) == 0:
+			return Counter(Classes).most_common()[0][0]
+		
+		left_child = self.build_node(Data_left, Classes_left, level + 1)
+		right_child = self.build_node(Data_right, Classes_right, level + 1)
+		return Node(feature_index, value, left_child, right_child)
+
+	def make_tree(self,Data,Classes):
+		self.root = self.build_node(Data,Classes,0)
+
+	def find_best_split(self, Data, Classes, feature_list):
+		#print feature_list
+		best_gain = 0
+		best_feature_index = 0
+		best_threshold = 0
+		for i in feature_list:
+			distinct_values = sorted(set([Data[k][i] for k in range(0,len(Data))]))
+			min_req = min(distinct_values)
+			max_req = max(distinct_values)
+			#print len(frange(float(min_req),float(max_req),float((max_req-min_req)/100)))
+			for j in frange(float(min_req),float(max_req),float((max_req-min_req)/100)):
+				threshold = j
+				[Data_left,Classes_left,Data_right,Classes_right] = split_data(Data, Classes, threshold, i)
+				current_gain = calculate_gain(Classes_left, Classes_right, Classes)
+
+				if current_gain > best_gain:
+					best_gain = current_gain
+					best_feature_index = i
+					best_threshold = threshold
+		return [best_feature_index, best_threshold]
+
+	def predict(self, Data):
+
+		"""Predict the class of the sample"""
+
+		total_samples = len(Data)
+		ans = [-1]*total_samples
+		for i in xrange(total_samples):
+			node = self.root
+			while(isinstance(node, Node)):
+				if Data[i][node.feature_index] <= node.threshold:
+					node = node.left_child
+				else:
+					node = node.right_child
+			ans[i]=node
+		return ans
+
+
+def split_data(Data, Classes, threshold, index):
+
+	""" Function to split the data according to the feature and the threshold """
+
+	Data_left = []
+	Data_right = []
+	Classes_left = []
+	Classes_right = []
+	for i in xrange(len(Classes)):
+		if Data[i][index] <= threshold:
+			Data_left.append(Data[i])
+			Classes_left.append(Classes[i])
+		else:
+			Data_right.append(Data[i])
+			Classes_right.append(Classes[i])
+	return [Data_left, Classes_left, Data_right, Classes_right]
+
+def calculate_gain(Classes_left, Classes_right, Classes):
+	return calculate_entropy(Classes) - (calculate_entropy(Classes_left)*len(Classes_left) + calculate_entropy(Classes_right)*len(Classes_right))/len(Classes)
+
+def calculate_entropy(Classes):
+	unique_classes = Counter(Classes)
+	s = float(0)
+	total_samples = len(Classes)
+	for label, count in unique_classes.items():
+		prob = float(count)/float(total_samples)
+		#print prob
+		s -= prob*(math.log(prob)/math.log(2))
+	return s
+
+class Node(object):
+
+	""" A class to mantain the nodes of the decision tree """
+
+	def __init__(self, feature_index, threshold, left_child, right_child):
+		self.feature_index = feature_index
+		self.threshold = threshold
+		self.left_child = left_child
+		self.right_child = right_child

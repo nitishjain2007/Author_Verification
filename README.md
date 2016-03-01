@@ -7,4 +7,6 @@ Apart from them Neural Network, SVM, and Tree Bagger were also used for finally 
 
 SVM and Treebagger were used as inbuilt classifiers from matlab.
 
+The extract_features.py file helps in feature extraction.
+
 The dataset was taken from Project Gutenberg.
